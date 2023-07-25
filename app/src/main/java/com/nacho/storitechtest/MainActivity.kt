@@ -8,10 +8,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.nacho.auth.LoginScreen
-import com.nacho.auth.RegisterScreen
+import com.nacho.auth.navigation.loginRoute
+import com.nacho.auth.navigation.loginScreen
+import com.nacho.auth.navigation.navigateToRegisterScreen
+import com.nacho.auth.navigation.registerScreen
 import com.nacho.storitechtest.ui.theme.StoriTechTestTheme
 
 class MainActivity : ComponentActivity() {
@@ -35,9 +36,13 @@ fun AppContent() {
         color = MaterialTheme.colorScheme.background,
         contentColor = MaterialTheme.colorScheme.onBackground
     ) {
-        NavHost(navController, startDestination = "login") {
-            composable("login") { LoginScreen(navController) }
-            composable("register") { RegisterScreen(navController) }
+        NavHost(navController, startDestination = loginRoute) {
+            loginScreen {
+                navController.navigateToRegisterScreen()
+            }
+            registerScreen {
+                navController.popBackStack()
+            }
         }
     }
 }
