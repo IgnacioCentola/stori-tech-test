@@ -28,3 +28,10 @@ fun NavGraphBuilder.registerScreen(onNavigateToLogin: () -> Unit = {}) {
         RegisterScreen(onNavigateToLogin = onNavigateToLogin)
     }
 }
+
+object OnboardingScreens{
+    const val Name = 0
+    const val Email = 1
+    const val Password = 2
+    const val Final = 3
+}

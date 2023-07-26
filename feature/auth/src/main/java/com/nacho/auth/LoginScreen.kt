@@ -7,16 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -25,13 +18,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.nacho.auth.components.StoriButton
+import com.nacho.auth.components.StoriTextField
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(onNavigateToRegister: () -> Unit = {}) {
     Surface(
@@ -49,58 +41,41 @@ fun LoginScreen(onNavigateToRegister: () -> Unit = {}) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text("Login", style = MaterialTheme.typography.headlineMedium)
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            TextField(
+            StoriTextField(
                 value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Next
-                ),
-                keyboardActions = KeyboardActions(
-                    onNext = { /* Handle Next action */ }
-                )
+                label = "Email",
+                imeAction = ImeAction.Next,
+                onNextAction = { },
+                onValueChange = { email = it }, isEmailField = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextField(
+            StoriTextField(
                 value = password,
+                label = "Password",
+                isPasswordField = true,
                 onValueChange = { password = it },
-                label = { Text("Password") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = { /* Handle Done action */ }
-                ),
-                visualTransformation = PasswordVisualTransformation(),
-                colors = TextFieldDefaults.textFieldColors(
-//                    backgroundColor = Color.Transparent,
-                    textColor = MaterialTheme.colorScheme.onSurface
-                )
-            )
+                onDoneAction = { })
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Button(
-                onClick = { /* Handle login button click */ },
+            StoriButton(
+                text = "Login",
+                onClick = { TODO() },
                 modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Login", fontSize = 18.sp)
-            }
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextButton(
-                onClick = {
-                    onNavigateToRegister.invoke()// Navigate to RegisterScreen
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Register", fontSize = 18.sp)
-            }
+            StoriButton(
+                text = "Register",
+                onClick = { onNavigateToRegister.invoke() },
+                modifier = Modifier.fillMaxWidth(),
+                isOutlined = true
+            )
         }
     }
 }
