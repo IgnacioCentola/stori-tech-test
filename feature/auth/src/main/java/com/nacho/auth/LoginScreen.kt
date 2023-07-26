@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -81,7 +82,7 @@ fun LoginScreen(onNavigateToRegister: () -> Unit = {}) {
                 )
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = { /* Handle login button click */ },
@@ -102,4 +103,10 @@ fun LoginScreen(onNavigateToRegister: () -> Unit = {}) {
             }
         }
     }
+}
+
+@Preview
+@Composable
+fun LoginPreview() {
+    LoginScreen()
 }
