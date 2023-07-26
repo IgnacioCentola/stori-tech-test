@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "574001908295",
+    "project_id": "stori-tech-test",
+    "storage_bucket": "stori-tech-test.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:574001908295:android:9e10bd2159925c46b6bf62",
+        "android_client_info": {
+          "package_name": "com.nacho.storitechtest"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "574001908295-6acf36mcke6tkkmona8pgqlnfr1g9usk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAGF9eC8UMpD3mGiGGKktDPrq3n-iMYjWQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "574001908295-6acf36mcke6tkkmona8pgqlnfr1g9usk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

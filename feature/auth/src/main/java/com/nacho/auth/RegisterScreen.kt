@@ -53,7 +53,7 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
         val pagerState = rememberPagerState()
         val coroutineScope = rememberCoroutineScope()
 
-        val onboardingStepsCount by remember { mutableStateOf(4) }
+        val onboardingStepsCount by remember { mutableStateOf(5) }
 
 
 
@@ -70,7 +70,7 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
                 state = pagerState
             ) { page ->
                 when (page) {
-                    OnboardingScreens.Name -> StepOne(
+                    OnboardingScreens.Name -> StepOneName(
                         name = name,
                         surname = surname,
                         age = age,
@@ -83,23 +83,32 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
                         }
                     )
 
-                    OnboardingScreens.Email -> StepTwo(
+                    OnboardingScreens.Email -> StepTwoEmail(
                         email = email,
                         onEmailChange = { email = it },
                         onBack = {
                             coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Name) }
                         },
                         onNext = {
-                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Password) }
+                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.ProfilePicture) }
                         })
 
-                    OnboardingScreens.Password -> StepThree(
+                    OnboardingScreens.ProfilePicture -> StepThreeProfilePic(
+                        onBack = {
+                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Email) }
+                        },
+                        onNext = {
+                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Password) }
+                        }
+                    )
+
+                    OnboardingScreens.Password -> StepFourPassword(
                         password = password,
                         confirmPassword = confirmPassword,
                         onPasswordChange = { password = it },
                         onConfirmPasswordChange = { confirmPassword = it },
                         onBack = {
-                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Email) }
+                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.ProfilePicture) }
                         },
                         onNext = {
                             coroutineScope.launch {
@@ -126,7 +135,7 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
 }
 
 @Composable
-fun StepOne(
+fun StepOneName(
     name: String,
     surname: String,
     age: String,
@@ -163,7 +172,8 @@ fun StepOne(
             value = age,
             label = "Age",
             onValueChange = onAgeChange,
-            onDoneAction = { }, isNumericalField = true)
+            onDoneAction = { }, isNumericalField = true
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 
@@ -172,7 +182,7 @@ fun StepOne(
 }
 
 @Composable
-fun StepTwo(
+fun StepTwoEmail(
     email: String,
     onEmailChange: (String) -> Unit = {},
     onNext: () -> Unit = {},
@@ -185,18 +195,33 @@ fun StepTwo(
             value = email,
             label = "Email",
             onValueChange = onEmailChange,
-            onDoneAction = {  }, isEmailField = true
+            onDoneAction = { }, isEmailField = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         OnboardingNavButtons(onNext = onNext, onBack = onBack)
     }
 }
 
+@Composable
+fun StepThreeProfilePic(
+    onNext: () -> Unit = {},
+    onBack: () -> Unit = {}
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        StepHeadline(title = "Step 3: \nTake a profile picture")
+
+        StoriButton(text = "Take picture", onClick = {})
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        OnboardingNavButtons(onBack = onBack, onNext = onNext)
+    }
+}
 
 @Composable
-fun StepThree(
+fun StepFourPassword(
     password: String,
     confirmPassword: String,
     onPasswordChange: (String) -> Unit = {},
@@ -205,7 +230,7 @@ fun StepThree(
     onBack: () -> Unit = {}
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        StepHeadline(title = "Step 3: Create your password")
+        StepHeadline(title = "Step 4: Create your password")
 
         StoriTextField(
             value = password,
@@ -226,7 +251,7 @@ fun StepThree(
             isPasswordField = true
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         OnboardingNavButtons(onNext = onNext, onBack = onBack)
     }
@@ -280,20 +305,20 @@ fun StepHeadline(title: String) {
 
 @Preview(showBackground = true)
 @Composable
-fun StepOne() {
-    StepOne(name = "Ignacio", surname = "Centola", age = "23")
+fun StepOneName() {
+    StepOneName(name = "Ignacio", surname = "Centola", age = "23")
 }
 
 @Preview(showBackground = true)
 @Composable
-fun StepTwo() {
-    StepTwo(email = "centola@gmail.com")
+fun StepTwoEmail() {
+    StepTwoEmail(email = "centola@gmail.com")
 }
 
 @Preview(showBackground = true)
 @Composable
-fun StepThree() {
-    StepThree(password = "", confirmPassword = "")
+fun StepFourPassword() {
+    StepFourPassword(password = "", confirmPassword = "")
 }
 
 @Preview(showBackground = true)
