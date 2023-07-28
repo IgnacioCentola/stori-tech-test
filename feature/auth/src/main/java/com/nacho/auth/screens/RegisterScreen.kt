@@ -53,8 +53,17 @@ fun RegisterScreen(
         var email by rememberSaveable { mutableStateOf("") }
         var password by rememberSaveable { mutableStateOf("") }
         var confirmPassword by rememberSaveable { mutableStateOf("") }
+
+
+        var isNameEmptyError by rememberSaveable { mutableStateOf(false) }
+        var isSurnameEmptyError by rememberSaveable { mutableStateOf(false) }
+        var isAgeEmptyError by rememberSaveable { mutableStateOf(false) }
+
+        var isEmailEmptyError by rememberSaveable { mutableStateOf(false) }
+
+
         var isPasswordError by rememberSaveable { mutableStateOf(false) }
-        var isEmptyError by rememberSaveable { mutableStateOf(false) }
+        var isPasswordEmptyError by rememberSaveable { mutableStateOf(false) }
 
         val pagerState = rememberPagerState()
         val coroutineScope = rememberCoroutineScope()
@@ -78,14 +87,27 @@ fun RegisterScreen(
                         name = name,
                         surname = surname,
                         age = age,
-                        isEmptyError = isEmptyError,
-                        onAgeChange = { age = it },
-                        onNameChange = { name = it },
-                        onSurnameChange = { surname = it },
+                        isNameEmptyError = isNameEmptyError,
+                        isAgeEmptyError = isAgeEmptyError,
+                        isSurnameEmptyError = isSurnameEmptyError,
+                        onAgeChange = {
+                            age = it
+                            isAgeEmptyError = age.isEmpty()
+                        },
+                        onNameChange = {
+                            name = it
+                            isNameEmptyError = name.isEmpty()
+                        },
+                        onSurnameChange = {
+                            surname = it
+                            isSurnameEmptyError = surname.isEmpty()
+                        },
                         onBack = { onNavigateToLogin.invoke() },
                         onNext = {
-                            isEmptyError = name.isEmpty() || surname.isEmpty() || age.isEmpty()
-                            if (!isEmptyError)
+                            isAgeEmptyError = age.isEmpty()
+                            isNameEmptyError = name.isEmpty()
+                            isSurnameEmptyError = surname.isEmpty()
+                            if (!isAgeEmptyError and !isNameEmptyError and !isSurnameEmptyError)
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(
                                         OnboardingScreens.Email
@@ -96,14 +118,14 @@ fun RegisterScreen(
 
                     OnboardingScreens.Email -> StepTwoEmail(
                         email = email,
-                        isEmptyError = isEmptyError,
+                        isEmailEmptyError = isEmailEmptyError,
                         onEmailChange = { email = it },
                         onBack = {
                             coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Name) }
                         },
                         onNext = {
-                            isEmptyError = email.isEmpty()
-                            if (!isEmptyError)
+                            isEmailEmptyError = email.isEmpty()
+                            if (!isEmailEmptyError)
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(
                                         OnboardingScreens.ProfilePicture
@@ -124,7 +146,7 @@ fun RegisterScreen(
                         password = password,
                         confirmPassword = confirmPassword,
                         isPasswordError = isPasswordError,
-                        isEmptyError = isEmptyError,
+                        isEmptyError = isPasswordEmptyError,
                         onPasswordChange = { password = it },
                         onConfirmPasswordChange = {
                             confirmPassword = it
@@ -135,8 +157,8 @@ fun RegisterScreen(
                             coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.ProfilePicture) }
                         },
                         onNext = {
-                            isEmptyError = password.isEmpty() || confirmPassword.isEmpty()
-                            if (!isEmptyError)
+                            isPasswordEmptyError = password.isEmpty() || confirmPassword.isEmpty()
+                            if (!isPasswordEmptyError)
                                 coroutineScope.launch {
                                     pagerState.animateScrollToPage(
                                         OnboardingScreens.Final
@@ -171,7 +193,9 @@ fun StepOneName(
     onAgeChange: (String) -> Unit = {},
     onNext: () -> Unit = {},
     onBack: () -> Unit = {},
-    isEmptyError: Boolean = false,
+    isNameEmptyError: Boolean = false,
+    isSurnameEmptyError: Boolean = false,
+    isAgeEmptyError: Boolean = false,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 1: \nComplete the following data")
@@ -182,7 +206,7 @@ fun StepOneName(
             onValueChange = onNameChange,
             imeAction = ImeAction.Next,
             onNextAction = { },
-            isEmptyError = isEmptyError
+            isEmptyError = isNameEmptyError
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -193,7 +217,7 @@ fun StepOneName(
             onValueChange = onSurnameChange,
             imeAction = ImeAction.Next,
             onNextAction = { },
-            isEmptyError = isEmptyError
+            isEmptyError = isSurnameEmptyError
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -204,7 +228,7 @@ fun StepOneName(
             onValueChange = onAgeChange,
             onDoneAction = { },
             isNumericalField = true,
-            isEmptyError = isEmptyError
+            isEmptyError = isAgeEmptyError
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -219,7 +243,7 @@ fun StepTwoEmail(
     onEmailChange: (String) -> Unit = {},
     onNext: () -> Unit = {},
     onBack: () -> Unit = {},
-    isEmptyError: Boolean = false,
+    isEmailEmptyError: Boolean = false,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 2: Enter your email")
@@ -230,7 +254,7 @@ fun StepTwoEmail(
             onValueChange = onEmailChange,
             onDoneAction = { },
             isEmailField = true,
-            isEmptyError = isEmptyError
+            isEmptyError = isEmailEmptyError
         )
 
         Spacer(modifier = Modifier.height(32.dp))

@@ -1,5 +1,6 @@
 package com.nacho.home
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,15 +25,21 @@ import com.nacho.model.User
 
 @Composable
 fun HomeScreen(uiState: AuthUiState) {
-    when (uiState) {
-        is AuthUiState.Error -> ErrorState(uiState.msg)
-        AuthUiState.Loading -> LoadingState()
-        is AuthUiState.Success -> SuccessState(uiState.user)
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        when (uiState) {
+            is AuthUiState.Error -> ErrorState(uiState.msg)
+            AuthUiState.Loading -> LoadingState()
+            is AuthUiState.Success -> SuccessState(uiState.user)
+        }
     }
 }
 
 @Composable
 fun SuccessState(user: User) {
+    Log.d("PERON", "Success state")
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -48,16 +55,18 @@ fun SuccessState(user: User) {
 
 @Composable
 fun LoadingState() {
+    Log.d("PERON", "Loading state")
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(strokeWidth = 5.dp)
     }
 }
 
 @Composable
 fun ErrorState(errorMsg: String) {
+    Log.d("PERON", "Error state")
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

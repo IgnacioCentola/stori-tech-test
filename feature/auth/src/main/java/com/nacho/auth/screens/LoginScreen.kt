@@ -36,6 +36,9 @@ fun LoginScreen(
         var email by rememberSaveable { mutableStateOf("") }
         var password by rememberSaveable { mutableStateOf("") }
 
+        var isEmailEmptyError by rememberSaveable { mutableStateOf(false) }
+        var isPasswordEmptyError by rememberSaveable { mutableStateOf(false) }
+
         Column(
             modifier = Modifier
                 .padding(16.dp)
@@ -51,8 +54,12 @@ fun LoginScreen(
                 label = "Email",
                 imeAction = ImeAction.Next,
                 onNextAction = { },
-                onValueChange = { email = it },
-                isEmailField = true
+                onValueChange = {
+                    email = it
+                    isEmailEmptyError = email.isEmpty()
+                },
+                isEmailField = true,
+                isEmptyError = isEmailEmptyError
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -61,14 +68,24 @@ fun LoginScreen(
                 value = password,
                 label = "Password",
                 isPasswordField = true,
-                onValueChange = { password = it },
-                onDoneAction = { })
+                onValueChange = {
+                    password = it
+                    isPasswordEmptyError = password.isEmpty()
+                },
+                onDoneAction = { },
+                isEmptyError = isPasswordEmptyError
+            )
 
             Spacer(modifier = Modifier.height(32.dp))
 
             StoriButton(
                 text = "Login",
-                onClick = { onLogin(email, password) },
+                onClick = {
+                    isPasswordEmptyError = password.isEmpty()
+                    isEmailEmptyError = email.isEmpty()
+                    if (!isPasswordEmptyError and !isEmailEmptyError)
+                        onLogin(email, password)
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 

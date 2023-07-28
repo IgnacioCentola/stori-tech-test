@@ -89,7 +89,7 @@ fun StoriTextField(
                     IconButton(onClick = { showPassword = false }) {
                         Icon(
                             imageVector = Icons.Filled.Visibility,
-                            contentDescription = "hide_password"
+                            contentDescription = "show_password"
                         )
                     }
                 } else {

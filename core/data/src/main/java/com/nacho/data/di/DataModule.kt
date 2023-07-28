@@ -1,8 +1,8 @@
 package com.nacho.data.di
 
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ktx.database
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.nacho.data.repository.UserRepository
 import com.nacho.data.repository.UserRepositoryImpl
@@ -22,9 +22,9 @@ class DataModule {
 
     @Singleton
     @Provides
-    fun provideFirestoreDatabaseReference() = Firebase.database.reference
+    fun provideFirestoreDatabaseReference() = Firebase.firestore
 
     @Provides
-    fun provideUserRepository(auth: FirebaseAuth, database: DatabaseReference) : UserRepository =
-        UserRepositoryImpl(auth, database)
+    fun provideUserRepository(auth: FirebaseAuth, firestore: FirebaseFirestore): UserRepository =
+        UserRepositoryImpl(auth, firestore)
 }

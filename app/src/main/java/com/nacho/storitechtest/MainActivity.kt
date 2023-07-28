@@ -16,6 +16,7 @@ import com.nacho.auth.navigation.registerScreen
 import com.nacho.auth.viewmodel.AuthViewModel
 import com.nacho.home.navigation.homeScreen
 import com.nacho.home.navigation.navigateToHomeScreen
+import com.nacho.model.AuthUiState
 import com.nacho.storitechtest.ui.theme.StoriTechTestTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -42,7 +43,11 @@ fun AppContent() {
             onNavigateToRegister = { navController.navigateToRegisterScreen() },
             onLogin = { email, password ->
                 authViewModel.loginUser(email, password)
-                navController.navigateToHomeScreen()
+                when (state) {
+                    is AuthUiState.Error -> navController.navigateToHomeScreen()
+                    AuthUiState.Loading -> navController.navigateToHomeScreen()
+                    is AuthUiState.Success -> navController.navigateToHomeScreen()
+                }
             })
         registerScreen(
             onNavigateToLogin = {
@@ -50,7 +55,11 @@ fun AppContent() {
             },
             onRegister = { user, password ->
                 authViewModel.registerUser(user, password)
-                navController.navigateToHomeScreen()
+                when (state) {
+                    is AuthUiState.Error -> navController.navigateToHomeScreen()
+                    AuthUiState.Loading -> navController.navigateToHomeScreen()
+                    is AuthUiState.Success -> navController.navigateToHomeScreen()
+                }
             })
         homeScreen(state)
     }

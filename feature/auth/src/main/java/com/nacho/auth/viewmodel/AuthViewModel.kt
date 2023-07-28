@@ -23,24 +23,29 @@ class AuthViewModel @Inject constructor(private val authenticateUserUseCase: Aut
         password: String
     ) {
         viewModelScope.launch {
-            authenticateUserUseCase.registerUser(user = user, password = password)
-                .also { response ->
-                    val error = response.errorMsg ?: "Unknown error"
-                    _uiState.value = response.user?.let {
-                        AuthUiState.Success(user = it)
-                    } ?: AuthUiState.Error(msg = error)
-                }
+            authenticateUserUseCase.registerUser(
+                user = user,
+                password = password,
+                onResult = {
+                    _uiState.value = AuthUiState.Success(it)
+                },
+                onError = {
+                    _uiState.value = AuthUiState.Error(msg = it)
+                })
         }
     }
 
     fun loginUser(email: String, password: String) {
         viewModelScope.launch {
-            authenticateUserUseCase.loginUser(email, password).also { response ->
-                val error = response.errorMsg ?: "Unknown error"
-                _uiState.value = response.user?.let {
-                    AuthUiState.Success(user = it)
-                } ?: AuthUiState.Error(msg = error)
-            }
+            authenticateUserUseCase.loginUser(
+                email = email,
+                password = password,
+                onResult = {
+                    _uiState.value = AuthUiState.Success(it)
+                },
+                onError = {
+                    _uiState.value = AuthUiState.Error(msg = it)
+                })
         }
     }
 
