@@ -1,6 +1,6 @@
 @file:OptIn(ExperimentalMaterial3Api::class)
 
-package com.nacho.auth
+package com.nacho.auth.screens
 
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -33,12 +33,16 @@ import com.nacho.auth.components.OnboardingNavButtons
 import com.nacho.auth.components.StoriButton
 import com.nacho.auth.components.StoriTextField
 import com.nacho.auth.navigation.OnboardingScreens
+import com.nacho.model.User
 import kotlinx.coroutines.launch
 
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
+fun RegisterScreen(
+    onNavigateToLogin: () -> Unit = {},
+    onRegister: (user: User, password: String) -> Unit = { _, _ -> }
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
@@ -49,13 +53,13 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
         var email by rememberSaveable { mutableStateOf("") }
         var password by rememberSaveable { mutableStateOf("") }
         var confirmPassword by rememberSaveable { mutableStateOf("") }
+        var isPasswordError by rememberSaveable { mutableStateOf(false) }
+        var isEmptyError by rememberSaveable { mutableStateOf(false) }
 
         val pagerState = rememberPagerState()
         val coroutineScope = rememberCoroutineScope()
 
         val onboardingStepsCount by remember { mutableStateOf(5) }
-
-
 
         Column(
             modifier = Modifier
@@ -74,23 +78,37 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
                         name = name,
                         surname = surname,
                         age = age,
+                        isEmptyError = isEmptyError,
                         onAgeChange = { age = it },
                         onNameChange = { name = it },
                         onSurnameChange = { surname = it },
                         onBack = { onNavigateToLogin.invoke() },
                         onNext = {
-                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Email) }
+                            isEmptyError = name.isEmpty() || surname.isEmpty() || age.isEmpty()
+                            if (!isEmptyError)
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(
+                                        OnboardingScreens.Email
+                                    )
+                                }
                         }
                     )
 
                     OnboardingScreens.Email -> StepTwoEmail(
                         email = email,
+                        isEmptyError = isEmptyError,
                         onEmailChange = { email = it },
                         onBack = {
                             coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Name) }
                         },
                         onNext = {
-                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.ProfilePicture) }
+                            isEmptyError = email.isEmpty()
+                            if (!isEmptyError)
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(
+                                        OnboardingScreens.ProfilePicture
+                                    )
+                                }
                         })
 
                     OnboardingScreens.ProfilePicture -> StepThreeProfilePic(
@@ -105,17 +123,25 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
                     OnboardingScreens.Password -> StepFourPassword(
                         password = password,
                         confirmPassword = confirmPassword,
+                        isPasswordError = isPasswordError,
+                        isEmptyError = isEmptyError,
                         onPasswordChange = { password = it },
-                        onConfirmPasswordChange = { confirmPassword = it },
+                        onConfirmPasswordChange = {
+                            confirmPassword = it
+                            isPasswordError =
+                                confirmPassword.isNotEmpty() && confirmPassword != password
+                        },
                         onBack = {
                             coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.ProfilePicture) }
                         },
                         onNext = {
-                            coroutineScope.launch {
-                                pagerState.animateScrollToPage(
-                                    OnboardingScreens.Final
-                                )
-                            }
+                            isEmptyError = password.isEmpty() || confirmPassword.isEmpty()
+                            if (!isEmptyError)
+                                coroutineScope.launch {
+                                    pagerState.animateScrollToPage(
+                                        OnboardingScreens.Final
+                                    )
+                                }
                         })
 
                     OnboardingScreens.Final -> CompleteRegistration(
@@ -123,10 +149,11 @@ fun RegisterScreen(onNavigateToLogin: () -> Unit = {}) {
                         surname = surname,
                         age = age,
                         imageUri = null,
-                        email = email
-                    ) {
-                        onNavigateToLogin.invoke()
-                    }
+                        email = email,
+                        password = password,
+                        onNavigateToLogin = onNavigateToLogin,
+                        onRegister = onRegister
+                    )
                 }
             }
 
@@ -144,6 +171,7 @@ fun StepOneName(
     onAgeChange: (String) -> Unit = {},
     onNext: () -> Unit = {},
     onBack: () -> Unit = {},
+    isEmptyError: Boolean = false,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 1: \nComplete the following data")
@@ -153,7 +181,8 @@ fun StepOneName(
             label = "Name",
             onValueChange = onNameChange,
             imeAction = ImeAction.Next,
-            onNextAction = { }
+            onNextAction = { },
+            isEmptyError = isEmptyError
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -163,7 +192,8 @@ fun StepOneName(
             label = "Surname",
             onValueChange = onSurnameChange,
             imeAction = ImeAction.Next,
-            onNextAction = { }
+            onNextAction = { },
+            isEmptyError = isEmptyError
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -172,7 +202,9 @@ fun StepOneName(
             value = age,
             label = "Age",
             onValueChange = onAgeChange,
-            onDoneAction = { }, isNumericalField = true
+            onDoneAction = { },
+            isNumericalField = true,
+            isEmptyError = isEmptyError
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -186,7 +218,8 @@ fun StepTwoEmail(
     email: String,
     onEmailChange: (String) -> Unit = {},
     onNext: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    isEmptyError: Boolean = false,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 2: Enter your email")
@@ -195,7 +228,9 @@ fun StepTwoEmail(
             value = email,
             label = "Email",
             onValueChange = onEmailChange,
-            onDoneAction = { }, isEmailField = true
+            onDoneAction = { },
+            isEmailField = true,
+            isEmptyError = isEmptyError
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -227,7 +262,9 @@ fun StepFourPassword(
     onPasswordChange: (String) -> Unit = {},
     onConfirmPasswordChange: (String) -> Unit = {},
     onNext: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    isPasswordError: Boolean = false,
+    isEmptyError: Boolean = false,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 4: Create your password")
@@ -238,7 +275,8 @@ fun StepFourPassword(
             onValueChange = onPasswordChange,
             imeAction = ImeAction.Next,
             onNextAction = { },
-            isPasswordField = true
+            isPasswordField = true,
+            isEmptyError = isEmptyError
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -248,7 +286,9 @@ fun StepFourPassword(
             label = "Confirm password",
             onValueChange = onConfirmPasswordChange,
             onDoneAction = { },
-            isPasswordField = true
+            isPasswordField = true,
+            isPasswordError = isPasswordError,
+            isEmptyError = isEmptyError
         )
 
         Spacer(modifier = Modifier.height(32.dp))
@@ -264,7 +304,9 @@ fun CompleteRegistration(
     age: String,
     imageUri: Uri?,
     email: String,
-    onNavigateToLogin: () -> Unit
+    password: String,
+    onNavigateToLogin: () -> Unit = {},
+    onRegister: (user: User, password: String) -> Unit = { _, _ -> }
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Complete Registration")
@@ -280,7 +322,14 @@ fun CompleteRegistration(
         StoriButton(
             text = "Register",
             modifier = Modifier.fillMaxWidth(),
-            onClick = {}
+            onClick = {
+                val user = User(
+                    email = email,
+                    userName = "$name $surname",
+                    age = age
+                )
+                onRegister(user, password)
+            }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -329,8 +378,7 @@ fun CompleteRegis() {
         surname = "Centola",
         age = "23",
         imageUri = null,
-        email = "centola@gmail.com"
-    ) {
-
-    }
+        email = "centola@gmail.com",
+        password = ""
+    )
 }

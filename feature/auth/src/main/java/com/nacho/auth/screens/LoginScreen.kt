@@ -1,4 +1,4 @@
-package com.nacho.auth
+package com.nacho.auth.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -25,7 +25,10 @@ import com.nacho.auth.components.StoriTextField
 
 
 @Composable
-fun LoginScreen(onNavigateToRegister: () -> Unit = {}) {
+fun LoginScreen(
+    onNavigateToRegister: () -> Unit = {},
+    onLogin: (email: String, password: String) -> Unit = { _, _ -> }
+) {
     Surface(
         modifier = Modifier.fillMaxSize(),
         color = MaterialTheme.colorScheme.surface
@@ -48,7 +51,8 @@ fun LoginScreen(onNavigateToRegister: () -> Unit = {}) {
                 label = "Email",
                 imeAction = ImeAction.Next,
                 onNextAction = { },
-                onValueChange = { email = it }, isEmailField = true
+                onValueChange = { email = it },
+                isEmailField = true
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -64,7 +68,7 @@ fun LoginScreen(onNavigateToRegister: () -> Unit = {}) {
 
             StoriButton(
                 text = "Login",
-                onClick = { TODO() },
+                onClick = { onLogin(email, password) },
                 modifier = Modifier.fillMaxWidth()
             )
 

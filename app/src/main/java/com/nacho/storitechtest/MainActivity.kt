@@ -3,18 +3,23 @@ package com.nacho.storitechtest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.nacho.auth.navigation.loginRoute
 import com.nacho.auth.navigation.loginScreen
 import com.nacho.auth.navigation.navigateToRegisterScreen
 import com.nacho.auth.navigation.registerScreen
+import com.nacho.auth.viewmodel.AuthViewModel
+import com.nacho.home.navigation.homeScreen
+import com.nacho.home.navigation.navigateToHomeScreen
 import com.nacho.storitechtest.ui.theme.StoriTechTestTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,19 +35,24 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun AppContent() {
     val navController = rememberNavController()
-    val coroutineScope = rememberCoroutineScope()
-
-    Surface(
-        color = MaterialTheme.colorScheme.background,
-        contentColor = MaterialTheme.colorScheme.onBackground
-    ) {
-        NavHost(navController, startDestination = loginRoute) {
-            loginScreen {
-                navController.navigateToRegisterScreen()
-            }
-            registerScreen {
+    val authViewModel = viewModel<AuthViewModel>()
+    val state by authViewModel.uiState.collectAsState()
+    NavHost(navController, startDestination = loginRoute) {
+        loginScreen(
+            onNavigateToRegister = { navController.navigateToRegisterScreen() },
+            onLogin = { email, password ->
+                authViewModel.loginUser(email, password)
+                navController.navigateToHomeScreen()
+            })
+        registerScreen(
+            onNavigateToLogin = {
                 navController.popBackStack()
-            }
-        }
+            },
+            onRegister = { user, password ->
+                authViewModel.registerUser(user, password)
+                navController.navigateToHomeScreen()
+            })
+        homeScreen(state)
     }
+
 }

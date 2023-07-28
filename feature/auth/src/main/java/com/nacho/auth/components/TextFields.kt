@@ -35,11 +35,13 @@ fun StoriTextField(
     onDoneAction: () -> Unit = {},
     isPasswordField: Boolean = false,
     isNumericalField: Boolean = false,
-    isEmailField: Boolean = false
+    isEmailField: Boolean = false,
+    isPasswordError: Boolean = false,
+    isEmptyError: Boolean = false,
 ) {
 
     var showPassword by remember {
-        mutableStateOf(false)
+        mutableStateOf(isPasswordField.not())
     }
 
     val keyboardType = if (isNumericalField) {
@@ -59,6 +61,7 @@ fun StoriTextField(
 
     OutlinedTextField(
         value = value,
+        singleLine = true,
         onValueChange = { onValueChange(it) },
         label = { Text(label) },
         leadingIcon = { Icon(imageVector = leadingIcon, contentDescription = null) },
@@ -71,6 +74,15 @@ fun StoriTextField(
             onDone = { onDoneAction.invoke() }
         ),
         shape = RoundedCornerShape(percent = 20),
+        supportingText = {
+            Text(
+                text = if (isPasswordError)
+                    "Passwords do not match"
+                else if (isEmptyError) "Complete this field"
+                else ""
+            )
+        },
+        isError = isPasswordError or isEmptyError,
         trailingIcon = {
             if (isPasswordField)
                 if (showPassword) {

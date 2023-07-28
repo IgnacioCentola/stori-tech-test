@@ -1,13 +1,12 @@
 plugins {
     id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.gms.google-services'
     id 'kotlin-kapt'
     id 'com.google.dagger.hilt.android'
 }
 
 android {
-    namespace 'com.nacho.data'
+    namespace 'com.nacho.domain'
     compileSdk 33
 
     defaultConfig {
@@ -39,14 +38,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.9.0'
 
-    //Firebase
-    implementation 'com.google.firebase:firebase-auth:22.1.0'
-    implementation 'com.google.firebase:firebase-storage-ktx:20.2.1'
-    implementation 'com.google.firebase:firebase-firestore-ktx:24.7.0'
-    implementation 'com.google.firebase:firebase-core:21.1.1'
-    implementation 'com.google.firebase:firebase-database-ktx:20.2.2'
-//    implementation 'com.google.firebase:firebase-annotations:16.2.0'
-
     //Hilt
     implementation "com.google.dagger:hilt-android:2.44"
     kapt "com.google.dagger:hilt-compiler:2.44"
@@ -55,7 +46,8 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
-    implementation(project(path: ':core:model'))
+    implementation project(path: ':core:data')
+    implementation project(path: ':core:model')
 }
 
 kapt {
