@@ -3,9 +3,8 @@ package com.nacho.auth.navigation
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.nacho.auth.screens.LoginScreen
-import com.nacho.auth.screens.RegisterScreen
-import com.nacho.model.User
+import com.nacho.auth.screens.LoginRoute
+import com.nacho.auth.screens.RegisterRoute
 
 const val loginRoute = "login"
 const val registerRoute = "register"
@@ -16,10 +15,10 @@ fun NavController.navigateToLoginScreen() {
 
 fun NavGraphBuilder.loginScreen(
     onNavigateToRegister: () -> Unit,
-    onLogin: (email: String, password: String) -> Unit
+    onLoginSuccess: (userId: String) -> Unit
 ) {
     composable(route = loginRoute) {
-        LoginScreen(onNavigateToRegister = onNavigateToRegister, onLogin = onLogin)
+        LoginRoute(onNavigateToRegister = onNavigateToRegister, onLoginSuccess = onLoginSuccess)
     }
 }
 
@@ -29,17 +28,9 @@ fun NavController.navigateToRegisterScreen() {
 
 fun NavGraphBuilder.registerScreen(
     onNavigateToLogin: () -> Unit = {},
-    onRegister: (user: User, password: String) -> Unit
+    onRegisterSuccess: (userId: String) -> Unit
 ) {
     composable(route = registerRoute) {
-        RegisterScreen(onNavigateToLogin = onNavigateToLogin, onRegister = onRegister)
+        RegisterRoute(onNavigateToLogin = onNavigateToLogin, onRegisterSuccess = onRegisterSuccess)
     }
-}
-
-object OnboardingScreens {
-    const val Name = 0
-    const val Email = 1
-    const val ProfilePicture = 2
-    const val Password = 3
-    const val Final = 4
 }

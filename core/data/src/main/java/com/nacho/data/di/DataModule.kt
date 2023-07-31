@@ -1,11 +1,13 @@
 package com.nacho.data.di
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ktx.database
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
-import com.nacho.data.repository.UserRepository
 import com.nacho.data.repository.UserRepositoryImpl
+import com.nacho.domain.repository.UserRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -24,7 +26,15 @@ class DataModule {
     @Provides
     fun provideFirestoreDatabaseReference() = Firebase.firestore
 
+    @Singleton
     @Provides
-    fun provideUserRepository(auth: FirebaseAuth, firestore: FirebaseFirestore): UserRepository =
-        UserRepositoryImpl(auth, firestore)
+    fun provideFirestoreRealtimeDatabaseRef() = Firebase.database.reference
+
+    @Provides
+    fun provideUserRepository(
+        auth: FirebaseAuth,
+        firestore: FirebaseFirestore,
+        databaseReference: DatabaseReference
+    ): UserRepository =
+        UserRepositoryImpl(auth, firestore, databaseReference)
 }

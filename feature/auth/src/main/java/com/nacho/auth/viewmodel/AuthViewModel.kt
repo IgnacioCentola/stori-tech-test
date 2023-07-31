@@ -1,7 +1,9 @@
 package com.nacho.auth.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nacho.domain.preferences.Preferences
 import com.nacho.domain.usecase.AuthenticateUserUseCase
 import com.nacho.model.AuthUiState
 import com.nacho.model.User
@@ -12,10 +14,16 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(private val authenticateUserUseCase: AuthenticateUserUseCase) :
+class AuthViewModel @Inject constructor(
+    private val authenticateUserUseCase: AuthenticateUserUseCase,
+    private val preferences: Preferences
+) :
     ViewModel() {
 
-    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Loading)
+    var userId = preferences.getUserId()
+        private set
+
+    private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Default)
     val uiState = _uiState.asStateFlow()
 
     fun registerUser(
@@ -26,8 +34,9 @@ class AuthViewModel @Inject constructor(private val authenticateUserUseCase: Aut
             authenticateUserUseCase.registerUser(
                 user = user,
                 password = password,
-                onResult = {
-                    _uiState.value = AuthUiState.Success(it)
+                onResult = { id ->
+                    preferences.saveUserId(id)
+                    _uiState.value = AuthUiState.Success
                 },
                 onError = {
                     _uiState.value = AuthUiState.Error(msg = it)
@@ -40,8 +49,10 @@ class AuthViewModel @Inject constructor(private val authenticateUserUseCase: Aut
             authenticateUserUseCase.loginUser(
                 email = email,
                 password = password,
-                onResult = {
-                    _uiState.value = AuthUiState.Success(it)
+                onResult = { id ->
+                    preferences.saveUserId(id)
+                    Log.d("PERON", "AuthViewModel saved userId: $userId")
+                    _uiState.value = AuthUiState.Success
                 },
                 onError = {
                     _uiState.value = AuthUiState.Error(msg = it)

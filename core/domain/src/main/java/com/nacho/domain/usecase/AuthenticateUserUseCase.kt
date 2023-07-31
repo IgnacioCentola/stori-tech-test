@@ -1,13 +1,15 @@
 package com.nacho.domain.usecase
 
-import com.nacho.data.repository.UserRepository
+import com.nacho.domain.repository.UserRepository
 import com.nacho.model.User
 import javax.inject.Inject
 
 class AuthenticateUserUseCase @Inject constructor(private val userRepository: UserRepository) {
 
     fun registerUser(
-        user: User, password: String, onResult: (user: User) -> Unit,
+        user: User,
+        password: String,
+        onResult: (userId: String) -> Unit,
         onError: (errorMsg: String) -> Unit,
     ) =
         userRepository.registerUser(
@@ -18,7 +20,9 @@ class AuthenticateUserUseCase @Inject constructor(private val userRepository: Us
         )
 
     fun loginUser(
-        email: String, password: String, onResult: (user: User) -> Unit,
+        email: String,
+        password: String,
+        onResult: (userId: String) -> Unit,
         onError: (errorMsg: String) -> Unit,
     ) =
         userRepository.loginUser(
@@ -27,5 +31,4 @@ class AuthenticateUserUseCase @Inject constructor(private val userRepository: Us
             onResult = onResult,
             onError = onError
         )
-
 }

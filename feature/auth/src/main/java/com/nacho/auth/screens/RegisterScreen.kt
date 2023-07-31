@@ -1,8 +1,9 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
+@file:OptIn(ExperimentalComposeUiApi::class)
 
 package com.nacho.auth.screens
 
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,11 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,166 +26,234 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.nacho.auth.components.OnboardingNavButtons
 import com.nacho.auth.components.StoriButton
 import com.nacho.auth.components.StoriTextField
-import com.nacho.auth.navigation.OnboardingScreens
+import com.nacho.auth.viewmodel.AuthViewModel
+import com.nacho.model.AuthUiState
 import com.nacho.model.User
 import kotlinx.coroutines.launch
 
 
+@Composable
+internal fun RegisterRoute(
+    onNavigateToLogin: () -> Unit = {},
+    onRegisterSuccess: (user: String) -> Unit = { _ -> },
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
+    val uiState by authViewModel.uiState.collectAsState()
+    RegisterScreen(
+        uiState = uiState,
+        onNavigateToLogin = onNavigateToLogin,
+        onRegister = { user, psw ->
+            authViewModel.registerUser(user, psw)
+        },
+        onRegisterSuccess = {
+            onRegisterSuccess(authViewModel.userId)
+        }
+    )
+}
+
+@Composable
+internal fun RegisterScreen(
+    onNavigateToLogin: () -> Unit = {},
+    onRegister: (user: User, password: String) -> Unit = { _, _ -> },
+    onRegisterSuccess: () -> Unit = {},
+    uiState: AuthUiState
+) {
+    val keyboardController = LocalSoftwareKeyboardController.current
+    when (uiState) {
+        AuthUiState.Default -> DefaultState(
+            onRegister = onRegister,
+            onNavigateToLogin = onNavigateToLogin,
+            onDoneKeyboardAction = {
+                keyboardController?.hide()
+            }
+        )
+
+        is AuthUiState.Error -> ErrorState(msg = uiState.msg)
+        AuthUiState.Loading -> LoadingState()
+        AuthUiState.Success -> {
+            LoadingState(showDialog = true, isSuccess = true)
+            onRegisterSuccess.invoke()
+        }
+    }
+
+}
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun RegisterScreen(
+private fun DefaultState(
     onNavigateToLogin: () -> Unit = {},
-    onRegister: (user: User, password: String) -> Unit = { _, _ -> }
+    onRegister: (user: User, password: String) -> Unit = { _, _ -> },
+    onDoneKeyboardAction: () -> Unit = {},
 ) {
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.surface
+    var name by rememberSaveable { mutableStateOf("") }
+    var surname by rememberSaveable { mutableStateOf("") }
+    var age by rememberSaveable { mutableStateOf("") }
+    var email by rememberSaveable { mutableStateOf("") }
+    var password by rememberSaveable { mutableStateOf("") }
+    var confirmPassword by rememberSaveable { mutableStateOf("") }
+
+
+    var isNameEmptyError by rememberSaveable { mutableStateOf(false) }
+    var isSurnameEmptyError by rememberSaveable { mutableStateOf(false) }
+    var isAgeEmptyError by rememberSaveable { mutableStateOf(false) }
+
+    var isEmailEmptyError by rememberSaveable { mutableStateOf(false) }
+
+
+    var isPasswordError by rememberSaveable { mutableStateOf(false) }
+    var isPasswordEmptyError by rememberSaveable { mutableStateOf(false) }
+
+    val pagerState = rememberPagerState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val onboardingStepsCount by remember { mutableStateOf(5) }
+
+    Column(
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        var name by rememberSaveable { mutableStateOf("") }
-        var surname by rememberSaveable { mutableStateOf("") }
-        var age by rememberSaveable { mutableStateOf("") }
-        var email by rememberSaveable { mutableStateOf("") }
-        var password by rememberSaveable { mutableStateOf("") }
-        var confirmPassword by rememberSaveable { mutableStateOf("") }
+        HorizontalPager(
+            userScrollEnabled = false,
+            pageCount = onboardingStepsCount,
+            state = pagerState
+        ) { page ->
+            when (page) {
+                OnboardingPagerStep.Name -> StepOneName(
+                    name = name,
+                    surname = surname,
+                    age = age,
+                    isNameEmptyError = isNameEmptyError,
+                    isAgeEmptyError = isAgeEmptyError,
+                    isSurnameEmptyError = isSurnameEmptyError,
+                    onAgeChange = {
+                        age = it
+                        isAgeEmptyError = age.isEmpty()
+                    },
+                    onNameChange = {
+                        name = it
+                        isNameEmptyError = name.isEmpty()
+                    },
+                    onSurnameChange = {
+                        surname = it
+                        isSurnameEmptyError = surname.isEmpty()
+                    },
+                    onBack = { onNavigateToLogin.invoke() },
+                    onNext = {
+                        isAgeEmptyError = age.isEmpty()
+                        isNameEmptyError = name.isEmpty()
+                        isSurnameEmptyError = surname.isEmpty()
+                        if (!isAgeEmptyError and !isNameEmptyError and !isSurnameEmptyError)
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(
+                                    OnboardingPagerStep.Email
+                                )
+                            }
+                    },
+                    onDoneKeyboardAction = onDoneKeyboardAction
+                )
 
-
-        var isNameEmptyError by rememberSaveable { mutableStateOf(false) }
-        var isSurnameEmptyError by rememberSaveable { mutableStateOf(false) }
-        var isAgeEmptyError by rememberSaveable { mutableStateOf(false) }
-
-        var isEmailEmptyError by rememberSaveable { mutableStateOf(false) }
-
-
-        var isPasswordError by rememberSaveable { mutableStateOf(false) }
-        var isPasswordEmptyError by rememberSaveable { mutableStateOf(false) }
-
-        val pagerState = rememberPagerState()
-        val coroutineScope = rememberCoroutineScope()
-
-        val onboardingStepsCount by remember { mutableStateOf(5) }
-
-        Column(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            HorizontalPager(
-                userScrollEnabled = false,
-                pageCount = onboardingStepsCount,
-                state = pagerState
-            ) { page ->
-                when (page) {
-                    OnboardingScreens.Name -> StepOneName(
-                        name = name,
-                        surname = surname,
-                        age = age,
-                        isNameEmptyError = isNameEmptyError,
-                        isAgeEmptyError = isAgeEmptyError,
-                        isSurnameEmptyError = isSurnameEmptyError,
-                        onAgeChange = {
-                            age = it
-                            isAgeEmptyError = age.isEmpty()
-                        },
-                        onNameChange = {
-                            name = it
-                            isNameEmptyError = name.isEmpty()
-                        },
-                        onSurnameChange = {
-                            surname = it
-                            isSurnameEmptyError = surname.isEmpty()
-                        },
-                        onBack = { onNavigateToLogin.invoke() },
-                        onNext = {
-                            isAgeEmptyError = age.isEmpty()
-                            isNameEmptyError = name.isEmpty()
-                            isSurnameEmptyError = surname.isEmpty()
-                            if (!isAgeEmptyError and !isNameEmptyError and !isSurnameEmptyError)
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(
-                                        OnboardingScreens.Email
-                                    )
-                                }
+                OnboardingPagerStep.Email -> StepTwoEmail(
+                    email = email,
+                    isEmailEmptyError = isEmailEmptyError,
+                    onEmailChange = { email = it },
+                    onBack = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(
+                                OnboardingPagerStep.Name
+                            )
                         }
-                    )
+                    },
+                    onNext = {
+                        isEmailEmptyError = email.isEmpty()
+                        if (!isEmailEmptyError)
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(
+                                    OnboardingPagerStep.ProfilePicture
+                                )
+                            }
+                    },
+                    onDoneKeyboardAction = onDoneKeyboardAction
+                )
 
-                    OnboardingScreens.Email -> StepTwoEmail(
-                        email = email,
-                        isEmailEmptyError = isEmailEmptyError,
-                        onEmailChange = { email = it },
-                        onBack = {
-                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Name) }
-                        },
-                        onNext = {
-                            isEmailEmptyError = email.isEmpty()
-                            if (!isEmailEmptyError)
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(
-                                        OnboardingScreens.ProfilePicture
-                                    )
-                                }
-                        })
-
-                    OnboardingScreens.ProfilePicture -> StepThreeProfilePic(
-                        onBack = {
-                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Email) }
-                        },
-                        onNext = {
-                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.Password) }
+                OnboardingPagerStep.ProfilePicture -> StepThreeProfilePic(
+                    onBack = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(
+                                OnboardingPagerStep.Email
+                            )
                         }
-                    )
+                    },
+                    onNext = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(
+                                OnboardingPagerStep.Password
+                            )
+                        }
+                    }
+                )
 
-                    OnboardingScreens.Password -> StepFourPassword(
-                        password = password,
-                        confirmPassword = confirmPassword,
-                        isPasswordError = isPasswordError,
-                        isEmptyError = isPasswordEmptyError,
-                        onPasswordChange = { password = it },
-                        onConfirmPasswordChange = {
-                            confirmPassword = it
-                            isPasswordError =
-                                confirmPassword.isNotEmpty() && confirmPassword != password
-                        },
-                        onBack = {
-                            coroutineScope.launch { pagerState.animateScrollToPage(OnboardingScreens.ProfilePicture) }
-                        },
-                        onNext = {
-                            isPasswordEmptyError = password.isEmpty() || confirmPassword.isEmpty()
-                            if (!isPasswordEmptyError)
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(
-                                        OnboardingScreens.Final
-                                    )
-                                }
-                        })
+                OnboardingPagerStep.Password -> StepFourPassword(
+                    password = password,
+                    confirmPassword = confirmPassword,
+                    isPasswordError = isPasswordError,
+                    isEmptyError = isPasswordEmptyError,
+                    onPasswordChange = { password = it },
+                    onConfirmPasswordChange = {
+                        confirmPassword = it
+                        isPasswordError =
+                            confirmPassword.isNotEmpty() && confirmPassword != password
+                    },
+                    onBack = {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(
+                                OnboardingPagerStep.ProfilePicture
+                            )
+                        }
+                    },
+                    onNext = {
+                        isPasswordEmptyError = password.isEmpty() || confirmPassword.isEmpty()
+                        if (!isPasswordEmptyError)
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(
+                                    OnboardingPagerStep.Final
+                                )
+                            }
+                    },
+                    onDoneKeyboardAction = onDoneKeyboardAction
+                )
 
-                    OnboardingScreens.Final -> CompleteRegistration(
-                        name = name,
-                        surname = surname,
-                        age = age,
-                        imageUri = null,
-                        email = email,
-                        password = password,
-                        onNavigateToLogin = onNavigateToLogin,
-                        onRegister = onRegister
-                    )
-                }
+                OnboardingPagerStep.Final -> CompleteRegistration(
+                    name = name,
+                    surname = surname,
+                    age = age,
+                    imageUri = null,
+                    email = email,
+                    onNavigateToLogin = onNavigateToLogin,
+                    onRegister = {
+                        onRegister(it, password)
+                    }
+                )
             }
-
         }
+
     }
 }
 
 @Composable
-fun StepOneName(
+private fun StepOneName(
     name: String,
     surname: String,
     age: String,
@@ -196,6 +265,7 @@ fun StepOneName(
     isNameEmptyError: Boolean = false,
     isSurnameEmptyError: Boolean = false,
     isAgeEmptyError: Boolean = false,
+    onDoneKeyboardAction: () -> Unit = {},
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 1: \nComplete the following data")
@@ -226,7 +296,7 @@ fun StepOneName(
             value = age,
             label = "Age",
             onValueChange = onAgeChange,
-            onDoneAction = { },
+            onDoneAction = onDoneKeyboardAction,
             isNumericalField = true,
             isEmptyError = isAgeEmptyError
         )
@@ -238,12 +308,13 @@ fun StepOneName(
 }
 
 @Composable
-fun StepTwoEmail(
+private fun StepTwoEmail(
     email: String,
     onEmailChange: (String) -> Unit = {},
     onNext: () -> Unit = {},
     onBack: () -> Unit = {},
     isEmailEmptyError: Boolean = false,
+    onDoneKeyboardAction: () -> Unit = {},
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 2: Enter your email")
@@ -252,7 +323,7 @@ fun StepTwoEmail(
             value = email,
             label = "Email",
             onValueChange = onEmailChange,
-            onDoneAction = { },
+            onDoneAction = onDoneKeyboardAction,
             isEmailField = true,
             isEmptyError = isEmailEmptyError
         )
@@ -264,7 +335,7 @@ fun StepTwoEmail(
 }
 
 @Composable
-fun StepThreeProfilePic(
+private fun StepThreeProfilePic(
     onNext: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
@@ -280,7 +351,7 @@ fun StepThreeProfilePic(
 }
 
 @Composable
-fun StepFourPassword(
+private fun StepFourPassword(
     password: String,
     confirmPassword: String,
     onPasswordChange: (String) -> Unit = {},
@@ -289,6 +360,7 @@ fun StepFourPassword(
     onBack: () -> Unit = {},
     isPasswordError: Boolean = false,
     isEmptyError: Boolean = false,
+    onDoneKeyboardAction: () -> Unit = {},
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 4: Create your password")
@@ -309,7 +381,7 @@ fun StepFourPassword(
             value = confirmPassword,
             label = "Confirm password",
             onValueChange = onConfirmPasswordChange,
-            onDoneAction = { },
+            onDoneAction = onDoneKeyboardAction,
             isPasswordField = true,
             isPasswordError = isPasswordError,
             isEmptyError = isEmptyError
@@ -322,15 +394,14 @@ fun StepFourPassword(
 }
 
 @Composable
-fun CompleteRegistration(
+private fun CompleteRegistration(
     name: String,
     surname: String,
     age: String,
     imageUri: Uri?,
     email: String,
-    password: String,
     onNavigateToLogin: () -> Unit = {},
-    onRegister: (user: User, password: String) -> Unit = { _, _ -> }
+    onRegister: (user: User) -> Unit = { _ -> }
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Complete Registration")
@@ -350,9 +421,11 @@ fun CompleteRegistration(
                 val user = User(
                     email = email,
                     userName = "$name $surname",
-                    age = age
+                    age = age,
+                    idUrl = "",
+                    movements = emptyList()
                 )
-                onRegister(user, password)
+                onRegister(user)
             }
         )
 
@@ -365,6 +438,40 @@ fun CompleteRegistration(
             isOutlined = true
         )
     }
+}
+
+@Composable
+private fun LoadingState(
+    showDialog: Boolean = false,
+    onDismissRequest: () -> Unit = {},
+    isSuccess: Boolean = false,
+) {
+    Log.d("PERON", "Register Loading state")
+    if (showDialog)
+        AlertDialog(
+            onDismissRequest = onDismissRequest,
+            title = { Text(if (isSuccess) "Signing you in..." else "Loading...") },
+            text = { Text("Please wait a moment") },
+            confirmButton = { },
+            dismissButton = { },
+        )
+}
+
+@Composable
+private fun ErrorState(
+    showDialog: Boolean = false,
+    onDismissRequest: () -> Unit = {},
+    msg: String
+) {
+    Log.d("PERON", "Register Error state")
+    if (showDialog)
+        AlertDialog(
+            onDismissRequest = onDismissRequest,
+            title = { Text("Error") },
+            text = { Text(msg) },
+            confirmButton = { },
+            dismissButton = { },
+        )
 }
 
 @Composable
@@ -403,6 +510,13 @@ fun CompleteRegis() {
         age = "23",
         imageUri = null,
         email = "centola@gmail.com",
-        password = ""
     )
+}
+
+private object OnboardingPagerStep {
+    const val Name = 0
+    const val Email = 1
+    const val ProfilePicture = 2
+    const val Password = 3
+    const val Final = 4
 }

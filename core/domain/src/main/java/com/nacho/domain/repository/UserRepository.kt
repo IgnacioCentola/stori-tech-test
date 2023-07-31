@@ -1,4 +1,4 @@
-package com.nacho.data.repository
+package com.nacho.domain.repository
 
 import com.nacho.model.User
 
@@ -8,13 +8,19 @@ interface UserRepository {
     fun registerUser(
         user: User,
         password: String,
-        onResult: (user: User) -> Unit,
+        onResult: (userId: String) -> Unit,
         onError: (errorMsg: String) -> Unit,
     )
 
     fun loginUser(
         email: String,
         password: String,
+        onResult: (userId: String) -> Unit,
+        onError: (errorMsg: String) -> Unit,
+    )
+
+    fun fetchUserData(
+        userId: String,
         onResult: (user: User) -> Unit,
         onError: (errorMsg: String) -> Unit,
     )
