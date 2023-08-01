@@ -18,12 +18,12 @@ import androidx.compose.ui.unit.dp
 
 
 @Composable
-fun NextButton(onNext: () -> Unit) {
+private fun NextButton(onNext: () -> Unit) {
     StoriButton(onClick = onNext, text = "Next")
 }
 
 @Composable
-fun PreviousButton(onBack: () -> Unit) {
+private fun PreviousButton(onBack: () -> Unit) {
     StoriButton(onClick = onBack, text = "Previous", isOutlined = true)
 }
 

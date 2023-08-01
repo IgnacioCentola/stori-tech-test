@@ -373,7 +373,10 @@ private fun StepThreeProfilePic(
         StepHeadline(title = "Step 3: \nTake a profile picture")
 
         if (hasCameraPermission) {
-            CameraScreen()
+            CameraScreen(
+                onUsePicture = onNext,
+                onPreviousSection = onBack
+            )
         } else {
             NoCameraPermission(
                 onRequestCameraPermission = onRequestCameraPermission
