@@ -33,14 +33,15 @@ class UserRepositoryImpl @Inject constructor(
         auth.createUserWithEmailAndPassword(user.email.toString(), password)
             .addOnSuccessListener {
                 Log.d("PERON", "Register OnSuccessListener called")
-                val currentUserId = auth.currentUser?.uid.toString()
-                firestore.collection(USERS_COLLECTION).document(currentUserId).set(user)
+//                val currentUserId = auth.currentUser?.uid.toString()
+                firestore.collection(USERS_COLLECTION).add(user)
                     .addOnSuccessListener { snapshot ->
+                        val docId = snapshot.id
                         Log.d(
                             "PERON",
-                            "createUser OnSuccessListener called with userId: $currentUserId"
+                            "createUser OnSuccessListener called with userId: $docId"
                         )
-                        onResult(currentUserId)
+                        onResult(docId)
                     }
                     .addOnFailureListener {
                         Log.d("PERON", "fetchUserData() OnFailureListener called")
@@ -86,36 +87,36 @@ class UserRepositoryImpl @Inject constructor(
         onResult: (user: User) -> Unit,
         onError: (errorMsg: String) -> Unit
     ) {
-        database.child(USERS_COLLECTION).child(userId).get()
-            .addOnSuccessListener {
-                Log.d("PERON", "fetchUserData() OnSuccessListener called with userId: $userId")
-                Log.d("PERON", "Snapshot data: $it")
-                Log.i("PERON", "Got value ${it.value}")
-                val user = it.getValue(User::class.java)
-                Log.d("PERON", "User data: $user")
-                if (user != null)
-                    onResult(user)
-                else
-                    onError("User data was null")
-            }.addOnFailureListener {
-                onError(it.message ?: it.toString())
-            }
-//        firestore.collection(USERS_COLLECTION).document(userId).get()
-//            .addOnSuccessListener { snapshot ->
+//        database.child(USERS_COLLECTION).child(userId).get()
+//            .addOnSuccessListener {
 //                Log.d("PERON", "fetchUserData() OnSuccessListener called with userId: $userId")
-//                Log.d("PERON", "Snapshot data: $snapshot")
-//                Log.d("PERON", "Document exists: ${snapshot.exists()}")
-//                val user =
-//                    snapshot.toObject<User>()
+//                Log.d("PERON", "Snapshot data: $it")
+//                Log.i("PERON", "Got value ${it.value}")
+//                val user = it.getValue(User::class.java)
 //                Log.d("PERON", "User data: $user")
 //                if (user != null)
 //                    onResult(user)
 //                else
 //                    onError("User data was null")
-//            }
-//            .addOnFailureListener {
-//                Log.d("PERON", "fetchUserData() OnFailureListener called")
+//            }.addOnFailureListener {
 //                onError(it.message ?: it.toString())
 //            }
+        firestore.collection(USERS_COLLECTION).document(userId).get()
+            .addOnSuccessListener { snapshot ->
+                Log.d("PERON", "fetchUserData() OnSuccessListener called with userId: $userId")
+                Log.d("PERON", "Snapshot data: $snapshot")
+                Log.d("PERON", "Document exists: ${snapshot.exists()}")
+                val user =
+                    snapshot.toObject<User>()
+                Log.d("PERON", "User data: $user")
+                if (user != null)
+                    onResult(user)
+                else
+                    onError("User data was null")
+            }
+            .addOnFailureListener {
+                Log.d("PERON", "fetchUserData() OnFailureListener called")
+                onError(it.message ?: it.toString())
+            }
     }
 }

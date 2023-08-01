@@ -105,7 +105,7 @@ private fun DefaultState(
 ) {
     Log.d("PERON", "Login Default state")
 
-    var email by rememberSaveable { mutableStateOf("gonzalo.gonzalez@gmail.com") }
+    var email by rememberSaveable { mutableStateOf("test@test.com") }
     var password by rememberSaveable { mutableStateOf("123456") }
 
     var isEmailEmptyError by rememberSaveable { mutableStateOf(false) }

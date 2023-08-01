@@ -3,6 +3,7 @@ package com.nacho.home.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.nacho.domain.preferences.Preferences
 import com.nacho.domain.usecase.GetUserDataUseCase
 import com.nacho.model.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -14,6 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getUserDataUseCase: GetUserDataUseCase,
+    private val preferences: Preferences
 ) :
     ViewModel() {
 
@@ -26,6 +28,7 @@ class HomeViewModel @Inject constructor(
             getUserDataUseCase.getUserData(
                 userId = userId,
                 onResult = {
+                    preferences.saveUserId(it.toString())
                     _uiState.value = HomeUiState.Success(it)
                 },
                 onError = {

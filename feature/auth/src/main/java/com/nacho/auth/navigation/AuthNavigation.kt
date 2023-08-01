@@ -1,5 +1,6 @@
 package com.nacho.auth.navigation
 
+import android.net.Uri
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -28,9 +29,12 @@ fun NavController.navigateToRegisterScreen() {
 
 fun NavGraphBuilder.registerScreen(
     onNavigateToLogin: () -> Unit = {},
-    onRegisterSuccess: (userId: String) -> Unit
+    onRegisterSuccess: (userId: String) -> Unit,
 ) {
     composable(route = registerRoute) {
-        RegisterRoute(onNavigateToLogin = onNavigateToLogin, onRegisterSuccess = onRegisterSuccess)
+        RegisterRoute(
+            onNavigateToLogin = onNavigateToLogin,
+            onRegisterSuccess = onRegisterSuccess,
+        )
     }
 }

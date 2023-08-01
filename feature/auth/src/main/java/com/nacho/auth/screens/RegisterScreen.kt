@@ -2,6 +2,7 @@
 
 package com.nacho.auth.screens
 
+import android.Manifest
 import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -14,12 +15,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -33,6 +37,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.nacho.auth.CameraScreen
 import com.nacho.auth.components.OnboardingNavButtons
 import com.nacho.auth.components.StoriButton
 import com.nacho.auth.components.StoriTextField
@@ -42,12 +50,15 @@ import com.nacho.model.User
 import kotlinx.coroutines.launch
 
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 internal fun RegisterRoute(
     onNavigateToLogin: () -> Unit = {},
     onRegisterSuccess: (user: String) -> Unit = { _ -> },
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = hiltViewModel(),
 ) {
+    val cameraPermissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
+
     val uiState by authViewModel.uiState.collectAsState()
     RegisterScreen(
         uiState = uiState,
@@ -57,7 +68,9 @@ internal fun RegisterRoute(
         },
         onRegisterSuccess = {
             onRegisterSuccess(authViewModel.userId)
-        }
+        },
+        hasCameraPermission = cameraPermissionState.status.isGranted,
+        onRequestCameraPermission = cameraPermissionState::launchPermissionRequest
     )
 }
 
@@ -66,7 +79,9 @@ internal fun RegisterScreen(
     onNavigateToLogin: () -> Unit = {},
     onRegister: (user: User, password: String) -> Unit = { _, _ -> },
     onRegisterSuccess: () -> Unit = {},
-    uiState: AuthUiState
+    uiState: AuthUiState,
+    hasCameraPermission: Boolean = false,
+    onRequestCameraPermission: () -> Unit = {}
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
     when (uiState) {
@@ -75,7 +90,9 @@ internal fun RegisterScreen(
             onNavigateToLogin = onNavigateToLogin,
             onDoneKeyboardAction = {
                 keyboardController?.hide()
-            }
+            },
+            hasCameraPermission = hasCameraPermission,
+            onRequestCameraPermission = onRequestCameraPermission
         )
 
         is AuthUiState.Error -> ErrorState(msg = uiState.msg)
@@ -94,13 +111,15 @@ private fun DefaultState(
     onNavigateToLogin: () -> Unit = {},
     onRegister: (user: User, password: String) -> Unit = { _, _ -> },
     onDoneKeyboardAction: () -> Unit = {},
+    hasCameraPermission: Boolean = false,
+    onRequestCameraPermission: () -> Unit = {}
 ) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var surname by rememberSaveable { mutableStateOf("") }
-    var age by rememberSaveable { mutableStateOf("") }
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
-    var confirmPassword by rememberSaveable { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("Test name") }
+    var surname by rememberSaveable { mutableStateOf("Test surname") }
+    var age by rememberSaveable { mutableStateOf("25") }
+    var email by rememberSaveable { mutableStateOf("test@test.com") }
+    var password by rememberSaveable { mutableStateOf("123456") }
+    var confirmPassword by rememberSaveable { mutableStateOf("123456") }
 
 
     var isNameEmptyError by rememberSaveable { mutableStateOf(false) }
@@ -113,10 +132,15 @@ private fun DefaultState(
     var isPasswordError by rememberSaveable { mutableStateOf(false) }
     var isPasswordEmptyError by rememberSaveable { mutableStateOf(false) }
 
-    val pagerState = rememberPagerState()
+    val onboardingStepsCount by remember { mutableIntStateOf(5) }
+    val pagerState = rememberPagerState(
+        initialPage = 0,
+        initialPageOffsetFraction = 0f
+    ) {
+        onboardingStepsCount
+    }
     val coroutineScope = rememberCoroutineScope()
 
-    val onboardingStepsCount by remember { mutableStateOf(5) }
 
     Column(
         modifier = Modifier
@@ -127,7 +151,6 @@ private fun DefaultState(
     ) {
         HorizontalPager(
             userScrollEnabled = false,
-            pageCount = onboardingStepsCount,
             state = pagerState
         ) { page ->
             when (page) {
@@ -202,7 +225,9 @@ private fun DefaultState(
                                 OnboardingPagerStep.Password
                             )
                         }
-                    }
+                    },
+                    hasCameraPermission = hasCameraPermission,
+                    onRequestCameraPermission = onRequestCameraPermission
                 )
 
                 OnboardingPagerStep.Password -> StepFourPassword(
@@ -337,17 +362,43 @@ private fun StepTwoEmail(
 @Composable
 private fun StepThreeProfilePic(
     onNext: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    hasCameraPermission: Boolean = false,
+    onRequestCameraPermission: () -> Unit = {}
 ) {
+    var hasPermission by remember {
+        mutableStateOf(false)
+    }
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         StepHeadline(title = "Step 3: \nTake a profile picture")
 
-        StoriButton(text = "Take picture", onClick = {})
+        if (hasCameraPermission) {
+            CameraScreen()
+        } else {
+            NoCameraPermission(
+                onRequestCameraPermission = onRequestCameraPermission
+            )
+        }
 
         Spacer(modifier = Modifier.height(32.dp))
+        OnboardingNavButtons(onBack = onBack, onNext = {
+            hasPermission = !hasPermission
+            if (hasCameraPermission)
+                onNext.invoke()
+        })
 
-        OnboardingNavButtons(onBack = onBack, onNext = onNext)
     }
+}
+
+@Composable
+private fun NoCameraPermission(
+    onRequestCameraPermission: () -> Unit = {}
+) {
+    StoriButton(
+        onClick = onRequestCameraPermission,
+        text = "Allow camera use",
+        icon = Icons.Default.Camera
+    )
 }
 
 @Composable
@@ -475,7 +526,7 @@ private fun ErrorState(
 }
 
 @Composable
-fun StepHeadline(title: String) {
+private fun StepHeadline(title: String) {
     Text(
         title,
         style = MaterialTheme.typography.headlineMedium
