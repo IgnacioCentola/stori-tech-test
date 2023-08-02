@@ -40,14 +40,18 @@ import com.nacho.common.utils.rotateBitmap
 fun CameraScreen(
     viewModel: CameraViewModel = hiltViewModel(),
     onUsePicture: () -> Unit = {},
-    onPreviousSection: () -> Unit = {}
+    onPreviousSection: () -> Unit = {},
+    onPhotoCaptured: (Bitmap) -> Unit,
 ) {
 
     val cameraState: CameraState by viewModel.state.collectAsState()
 
     CameraContent(
-        onPhotoCaptured = viewModel::onPhotoCaptured,
-        onPreviousSection = onPreviousSection
+        onPhotoCaptured = {
+            viewModel.onPhotoCaptured(it)
+            onPhotoCaptured(it)
+        },
+        onPreviousSection = onPreviousSection,
     )
 
     cameraState.capturedImage?.let { capturedImage: Bitmap ->
@@ -66,7 +70,7 @@ fun CameraScreen(
 private fun CapturedImageBitmapDialog(
     capturedImage: Bitmap,
     onDismissRequest: () -> Unit,
-    onUsePicture: () -> Unit = {}
+    onUsePicture: () -> Unit = {},
 ) {
 
     val capturedImageBitmap: ImageBitmap = remember { capturedImage.asImageBitmap() }

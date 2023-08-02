@@ -3,7 +3,7 @@
 package com.nacho.auth.screens
 
 import android.Manifest
-import android.net.Uri
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -63,8 +63,8 @@ internal fun RegisterRoute(
     RegisterScreen(
         uiState = uiState,
         onNavigateToLogin = onNavigateToLogin,
-        onRegister = { user, psw ->
-            authViewModel.registerUser(user, psw)
+        onRegister = { user, psw , bitmap->
+            authViewModel.registerUser(user, psw, bitmap)
         },
         onRegisterSuccess = {
             onRegisterSuccess(authViewModel.getCachedUserId())
@@ -77,7 +77,7 @@ internal fun RegisterRoute(
 @Composable
 internal fun RegisterScreen(
     onNavigateToLogin: () -> Unit = {},
-    onRegister: (user: User, password: String) -> Unit = { _, _ -> },
+    onRegister: (user: User, password: String, Bitmap) -> Unit = { _, _, _-> },
     onRegisterSuccess: () -> Unit = {},
     uiState: AuthUiState,
     hasCameraPermission: Boolean = false,
@@ -109,7 +109,7 @@ internal fun RegisterScreen(
 @Composable
 private fun DefaultState(
     onNavigateToLogin: () -> Unit = {},
-    onRegister: (user: User, password: String) -> Unit = { _, _ -> },
+    onRegister: (user: User, password: String, Bitmap) -> Unit = { _, _, _-> },
     onDoneKeyboardAction: () -> Unit = {},
     hasCameraPermission: Boolean = false,
     onRequestCameraPermission: () -> Unit = {}
@@ -141,6 +141,9 @@ private fun DefaultState(
     }
     val coroutineScope = rememberCoroutineScope()
 
+    var capturedImage by remember {
+        mutableStateOf<Bitmap?>(null)
+    }
 
     Column(
         modifier = Modifier
@@ -227,7 +230,10 @@ private fun DefaultState(
                         }
                     },
                     hasCameraPermission = hasCameraPermission,
-                    onRequestCameraPermission = onRequestCameraPermission
+                    onRequestCameraPermission = onRequestCameraPermission,
+                    onImageCaptured = {
+                        capturedImage = it
+                    }
                 )
 
                 OnboardingPagerStep.Password -> StepFourPassword(
@@ -264,13 +270,11 @@ private fun DefaultState(
                     name = name,
                     surname = surname,
                     age = age,
-                    imageUri = null,
                     email = email,
-                    onNavigateToLogin = onNavigateToLogin,
-                    onRegister = {
-                        onRegister(it, password)
-                    }
-                )
+                    onNavigateToLogin = onNavigateToLogin
+                ) {
+                    onRegister(it, password, capturedImage!!)
+                }
             }
         }
 
@@ -364,7 +368,8 @@ private fun StepThreeProfilePic(
     onNext: () -> Unit = {},
     onBack: () -> Unit = {},
     hasCameraPermission: Boolean = false,
-    onRequestCameraPermission: () -> Unit = {}
+    onRequestCameraPermission: () -> Unit = {},
+    onImageCaptured : (Bitmap) -> Unit
 ) {
     var hasPermission by remember {
         mutableStateOf(false)
@@ -375,7 +380,8 @@ private fun StepThreeProfilePic(
         if (hasCameraPermission) {
             CameraScreen(
                 onUsePicture = onNext,
-                onPreviousSection = onBack
+                onPreviousSection = onBack,
+                onPhotoCaptured = onImageCaptured
             )
         } else {
             NoCameraPermission(
@@ -452,7 +458,6 @@ private fun CompleteRegistration(
     name: String,
     surname: String,
     age: String,
-    imageUri: Uri?,
     email: String,
     onNavigateToLogin: () -> Unit = {},
     onRegister: (user: User) -> Unit = { _ -> }
@@ -496,7 +501,7 @@ private fun CompleteRegistration(
 
 @Composable
 private fun LoadingState(
-    showDialog: Boolean = false,
+    showDialog: Boolean = true,
     onDismissRequest: () -> Unit = {},
     isSuccess: Boolean = false,
 ) {
@@ -562,7 +567,6 @@ fun CompleteRegis() {
         name = "Ignacio",
         surname = "Centola",
         age = "23",
-        imageUri = null,
         email = "centola@gmail.com",
     )
 }

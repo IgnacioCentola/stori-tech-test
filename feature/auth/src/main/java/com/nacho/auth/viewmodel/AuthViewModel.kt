@@ -1,5 +1,6 @@
 package com.nacho.auth.viewmodel
 
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,9 +34,11 @@ class AuthViewModel @Inject constructor(
 
     fun registerUser(
         user: User,
-        password: String
+        password: String,
+        imageUri: Bitmap
     ) {
         viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
             authenticateUserUseCase.registerUser(
                 user = user,
                 password = password,
@@ -47,12 +50,15 @@ class AuthViewModel @Inject constructor(
                 },
                 onError = {
                     _uiState.value = AuthUiState.Error(msg = it)
-                })
+                },
+                idPicture = imageUri
+            )
         }
     }
 
     fun loginUser(email: String, password: String) {
         viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
             authenticateUserUseCase.loginUser(
                 email = email,
                 password = password,
