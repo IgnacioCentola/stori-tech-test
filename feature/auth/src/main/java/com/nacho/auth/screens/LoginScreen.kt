@@ -46,7 +46,7 @@ internal fun LoginRoute(
         onNavigateToRegister = onNavigateToRegister,
         uiState = uiState,
         onLoginSuccess = {
-            onLoginSuccess(authViewModel.userId)
+            onLoginSuccess(authViewModel.getCachedUserId())
         }
     )
 

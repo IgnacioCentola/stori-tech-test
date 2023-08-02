@@ -7,6 +7,6 @@ data class User(
     val userName: String? = null,
     val age: String? = null,
     val email: String? = null,
-    val idUrl: String? = null,
+    val idImageUrl: String? = null,
     val movements: List<Movement>? = null
 )

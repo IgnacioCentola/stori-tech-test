@@ -3,7 +3,7 @@ package com.nacho.home.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.nacho.domain.preferences.Preferences
+import com.nacho.domain.repository.StoreRepository
 import com.nacho.domain.usecase.GetUserDataUseCase
 import com.nacho.model.HomeUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -15,9 +15,13 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getUserDataUseCase: GetUserDataUseCase,
-    private val preferences: Preferences
+    private val storeRepository: StoreRepository
 ) :
     ViewModel() {
+
+    private companion object {
+        const val USER_ID = "user_id"
+    }
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState = _uiState.asStateFlow()
@@ -28,7 +32,10 @@ class HomeViewModel @Inject constructor(
             getUserDataUseCase.getUserData(
                 userId = userId,
                 onResult = {
-                    preferences.saveUserId(it.toString())
+                    viewModelScope.launch {
+                        storeRepository.putString(USER_ID, it.toString())
+
+                    }
                     _uiState.value = HomeUiState.Success(it)
                 },
                 onError = {

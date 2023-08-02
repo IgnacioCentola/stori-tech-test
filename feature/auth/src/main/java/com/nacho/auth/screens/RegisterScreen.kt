@@ -67,7 +67,7 @@ internal fun RegisterRoute(
             authViewModel.registerUser(user, psw)
         },
         onRegisterSuccess = {
-            onRegisterSuccess(authViewModel.userId)
+            onRegisterSuccess(authViewModel.getCachedUserId())
         },
         hasCameraPermission = cameraPermissionState.status.isGranted,
         onRequestCameraPermission = cameraPermissionState::launchPermissionRequest
@@ -476,7 +476,7 @@ private fun CompleteRegistration(
                     email = email,
                     userName = "$name $surname",
                     age = age,
-                    idUrl = "",
+                    idImageUrl = "",
                     movements = emptyList()
                 )
                 onRegister(user)

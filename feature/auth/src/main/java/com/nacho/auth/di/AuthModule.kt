@@ -1,29 +1,37 @@
 package com.nacho.auth.di
 
-import android.app.Application
 import android.content.Context
-import android.content.SharedPreferences
-import com.nacho.data.preferences.DefaultPreferences
-import com.nacho.domain.preferences.Preferences
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.preferencesDataStore
+import com.nacho.data.repository.DataStoreRepositoryImpl
+import com.nacho.domain.repository.StoreRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import androidx.datastore.preferences.core.Preferences as DataStorePreferences
+
+private const val PREFERENCES_NAME = "my_preferences"
+val Context.dataStore: DataStore<DataStorePreferences> by preferencesDataStore(name = PREFERENCES_NAME)
+
 @Module
 @InstallIn(SingletonComponent::class)
 object AuthModule {
-    @Provides
-    @Singleton
-    fun provideSharedPreferences(
-        app: Application
-    ): SharedPreferences {
-        return app.getSharedPreferences("shared_pref", Context.MODE_PRIVATE)
-    }
 
     @Provides
     @Singleton
-    fun providePreferences(sharedPreferences: SharedPreferences): Preferences {
-        return DefaultPreferences(sharedPreferences)
+    fun provideUserDataStorePreferences(
+        @ApplicationContext applicationContext: Context
+    ): DataStore<DataStorePreferences> {
+        return applicationContext.dataStore
     }
+
+    @Singleton
+    @Provides
+    fun provideDataStoreRepository(dataStore: DataStore<DataStorePreferences>): StoreRepository {
+        return DataStoreRepositoryImpl(dataStore)
+    }
+
 }
